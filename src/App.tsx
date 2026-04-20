@@ -132,7 +132,7 @@ const DynamicScraper: React.FC = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Scraped Data");
     const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([buf]), "extraction.xlsx");
+    saveAs(new Blob([buf]), `data_${Date.now()}.xlsx`);
   };
 
   // --- Dynamic Table Columns ---
