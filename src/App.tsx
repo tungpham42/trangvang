@@ -78,19 +78,17 @@ const DynamicScraper: React.FC = () => {
     );
   };
 
-  // 1. Helper function to strip prefixes
-  const cleanLinkValue = (rawVal: string): string => {
-    if (!rawVal) return "N/A";
+  // Helper to clean the visible text content
+  const cleanTextContent = (text: string): string => {
+    if (!text) return "N/A";
 
-    return rawVal
-      .replace(/^mailto:/i, "") // Remove mailto:
-      .replace(/^tel:/i, "") // Remove tel:
-      .replace(/^https?:\/\/(www\.)?/i, "") // Remove http://, https://, and www.
-      .split(/[?#]/)[0] // Remove tracking parameters (?utm...)
-      .replace(/\/$/, ""); // Remove trailing slashes
+    return text
+      .replace(/^mailto:/i, "") // Strip mailto: if it appears in text
+      .replace(/^tel:/i, "") // Strip tel: if it appears in text
+      .replace(/^https?:\/\/(www\.)?/i, "") // Strip URL prefixes
+      .trim(); // Remove surrounding whitespace
   };
 
-  // 2. Updated runExtraction inside the component
   const runExtraction = () => {
     if (!htmlContent.trim())
       return message.error("Please paste HTML content first.");
@@ -110,16 +108,9 @@ const DynamicScraper: React.FC = () => {
           const target = el.querySelector(col.selector);
 
           if (target) {
-            // Check if the user is targeting an <a> tag specifically or an element with an href
-            const href = target.getAttribute("href");
-
-            if (href) {
-              // Extract from href and CLEAN it
-              row[col.label] = cleanLinkValue(href);
-            } else {
-              // Fallback to text content if no href exists
-              row[col.label] = target.textContent?.trim() || "N/A";
-            }
+            // DIRECTIVE: Grab textContent (what the user sees), not the href attribute
+            const rawText = target.textContent || "N/A";
+            row[col.label] = cleanTextContent(rawText);
           } else {
             row[col.label] = "N/A";
           }
@@ -128,9 +119,10 @@ const DynamicScraper: React.FC = () => {
       });
 
       setData(results);
-      message.success(`Extracted ${results.length} rows with cleaned links.`);
+      message.success(`Extracted ${results.length} rows using visible text.`);
     } catch (e) {
-      message.error("Extraction failed.");
+      message.error("Extraction failed. Check the console.");
+      console.error(e);
     }
   };
 
